@@ -1,0 +1,52 @@
+import pandas as pd
+from ucimlrepo import fetch_ucirepo 
+  
+# fetch dataset 
+statlog_german_credit_data = fetch_ucirepo(id=144) 
+# data (as pandas dataframes) 
+X = statlog_german_credit_data.data.features 
+y = statlog_german_credit_data.data.targets 
+# metadata 
+#______print(statlog_german_credit_data.metadata) 
+# variable information 
+print(statlog_german_credit_data.variables) 
+
+# 1. Clean the target (y): 
+# The dataset has classes: 1 = Good credit risk, 2 = Bad credit risk.
+# Let's map it so 1 = Good (1) and 2 = Bad (0).
+y_binary = y['class'].map({1: 1, 2: 0})
+
+# 2. Encode all categorical features in X:
+# pd.get_dummies automatically detects text columns (like A11, A12) 
+# and converts them into separate 0/1 binary indicator columns.
+X_encoded = pd.get_dummies(X, drop_first=True)
+
+print(f"Original X shape: {X.shape}")
+print(f"Encoded X shape (after turning text into numbers): {X_encoded.shape}")
+print(f"Target distribution (1 = Good, 0 = Bad):\n{y_binary.value_counts()}")
+
+# code to view first 5 rows and all column heads of encoded data
+print("First 5 rows of your encoded data:")
+print(X_encoded.head())
+print("\nAll column names:")
+print(list(X_encoded.columns))
+
+# 1. Combine your encoded features and your cleaned target into one complete table
+full_data = X_encoded.copy()
+full_data['target_good_credit'] = y_binary
+
+# 2. Convert the DataFrame into a Python dictionary
+# 'list' creates {column_name: [row1, row2, ...]}
+# 'records' creates [{col1: val1, col2: val2}, ...] (one dictionary per person)
+data_dict = full_data.to_dict(orient='records')
+
+print(f"Total records in dictionary: {len(data_dict)}")
+print("First person in dictionary format:")
+print(data_dict[0])
+
+# 3. Save directly to a CSV file on your computer
+# index=False stops pandas from adding an extra unnamed row-number column
+full_data.to_csv("encoded_german_credit.csv", index=False)
+
+print("\nSaved 'encoded_german_credit.csv' to your project folder!")
+
